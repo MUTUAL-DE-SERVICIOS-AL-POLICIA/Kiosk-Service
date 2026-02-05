@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { NatsService } from 'src/common';
-import { KioskAuthenticationData } from './entities/kiosk-authentication-data.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { RpcException } from '@nestjs/microservices';
+import { InjectRepository } from '@nestjs/typeorm';
+import { NatsService } from 'src/common';
+import { Repository } from 'typeorm';
+import { KioskAuthenticationData } from './entities/kiosk-authentication-data.entity';
 
 @Injectable()
 export class KioskService {
@@ -74,14 +74,14 @@ export class KioskService {
     if (hasCI) {
       photos.push({
         fileId: 'ci',
-        path: `Person/images/kiosk/${personId}/ci/${formattedDate}-photoIdentityCard.png`,
+        path: `/Person/images/kiosk/${personId}/ci/${formattedDate}-photoIdentityCard.png`,
       });
     }
 
     if (hasFace) {
       photos.push({
         fileId: 'face',
-        path: `Person/images/kiosk/${personId}/face/${formattedDate}-photoFace.png`,
+        path: `/Person/images/kiosk/${personId}/face/${formattedDate}-photoFace.png`,
       });
     }
     return photos;
