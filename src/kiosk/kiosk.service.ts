@@ -98,4 +98,86 @@ export class KioskService {
       columns: ['id', 'quality', 'path'],
     });
   }
+
+  // Lista los trámites de fondo de retiro del afiliado (resuelto por ci en el Gateway).
+  async getRetirementFunds(payload: { authorization: string; ci: string }) {
+    const response = await this.nats.firstValue(
+      'pvtBe.kioskRetFunRetirementFunds',
+      payload,
+    );
+    return this.handleListResponse(response, 'Error al obtener fondo de retiro');
+  }
+
+  async getQuotaAids(payload: { authorization: string; ci: string }) {
+    const response = await this.nats.firstValue(
+      'pvtBe.kioskQuotaAidMortuaries',
+      payload,
+    );
+    return this.handleListResponse(
+      response,
+      'Error al obtener cuota y auxilio mortuorio',
+    );
+  }
+
+  async printRetFunLiquidation(payload: {
+    authorization: string;
+    retirementFundId: string;
+  }) {
+    const response = await this.nats.firstValue(
+      'pvtBe.kioskRetFunLiquidationPrint',
+      payload,
+    );
+    return this.handlePrintResponse(
+      response,
+      'Error al obtener la liquidación de fondo de retiro',
+    );
+  }
+
+  async printQuotaAidLiquidation(payload: {
+    authorization: string;
+    quotaAidId: string;
+  }) {
+    const response = await this.nats.firstValue(
+      'pvtBe.kioskQuotaAidLiquidationPrint',
+      payload,
+    );
+    return this.handlePrintResponse(
+      response,
+      'Error al obtener la liquidación de cuota y auxilio mortuorio',
+    );
+  }
+
+  // Normaliza la respuesta del Gateway: valida serviceStatus/error y quita serviceStatus
+  // para devolver solo el listado al cliente.
+  private handleListResponse(response: any, fallbackMessage: string) {
+    if (!response?.serviceStatus) {
+      throw new RpcException({ code: 502, message: fallbackMessage });
+    }
+    if (response.error) {
+      throw new RpcException({
+        code: response.statusCode ?? 500,
+        message: response.message ?? fallbackMessage,
+      });
+    }
+    const data = { ...response };
+    delete data.serviceStatus;
+    return data;
+  }
+
+  // La impresión llega en base64 (`response.data.content`); se expone como `binaryPdf`.
+  private handlePrintResponse(response: any, fallbackMessage: string) {
+    if (!response?.serviceStatus) {
+      throw new RpcException({ code: 502, message: fallbackMessage });
+    }
+    if (response.error) {
+      throw new RpcException({
+        code: response.statusCode ?? 500,
+        message: response.message ?? fallbackMessage,
+      });
+    }
+    return {
+      binaryPdf: response.data?.content,
+      serviceStatus: response.serviceStatus,
+    };
+  }
 }
