@@ -35,4 +35,36 @@ export class KioskController {
   getFingerprintComparison(@Payload() personId: number) {
     return this.kioskService.getFingerprintComparison(personId);
   }
+
+  // --- Fondo de retiro y cuota/auxilio mortuorio (afiliado por ci) ---
+  // Delegan en KioskService, que llama por NATS al Gateway (patrones pvtBe.kiosk*).
+  @MessagePattern('kiosk.retFunRetirementFunds')
+  getRetirementFunds(@Payload() payload: { authorization: string; ci: string }) {
+    return this.kioskService.getRetirementFunds(payload);
+  }
+
+  @MessagePattern('kiosk.quotaAidMortuaries')
+  getQuotaAids(@Payload() payload: { authorization: string; ci: string }) {
+    return this.kioskService.getQuotaAids(payload);
+  }
+
+  @MessagePattern('kiosk.retFunLiquidationPrint')
+  printRetFunLiquidation(
+    @Payload() payload: {
+      authorization: string;
+      retirementFundId: string;
+    },
+  ) {
+    return this.kioskService.printRetFunLiquidation(payload);
+  }
+
+  @MessagePattern('kiosk.quotaAidLiquidationPrint')
+  printQuotaAidLiquidation(
+    @Payload() payload: {
+      authorization: string;
+      quotaAidId: string;
+    },
+  ) {
+    return this.kioskService.printQuotaAidLiquidation(payload);
+  }
 }
